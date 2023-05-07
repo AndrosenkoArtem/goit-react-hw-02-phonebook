@@ -1,7 +1,6 @@
 import { ContactForm } from './ContactForm/ContactForm';
 import { GlobalStyle } from './GlobalStyle';
 import { Component } from 'react';
-import { nanoid } from 'nanoid';
 import { ContactList } from './ContactList/ContactList';
 import { Filter } from './Filter/Filter';
 
@@ -16,20 +15,32 @@ const INITIAL_STATE = {
 };
 export class App extends Component {
   state = { ...INITIAL_STATE };
-  loginInputId = nanoid();
+
   addContact = value => {
+    const { contacts } = this.state;
+    if (contacts.map(contact => contact.name === value.name).includes(true)) {
+      alert(`${value.name} is alredy in contacts`);
+      return;
+    }
     this.setState(prevState => ({
       contacts: [...prevState.contacts, value],
     }));
   };
   setFilterName = e => {
-    this.setState(prevState => ({
-      filter: e.target.value,
-      //перед фильтрацией нужно кидать все контакты
-      contacts: prevState.contacts.filter(contact =>
-        contact.name.toLowerCase().includes(e.target.value.toLowerCase())
+    const { name, value } = e.currentTarget;
+    this.setState({ [name]: value });
+  };
+  filteredContacts = () => {
+    return this.state.contacts.filter(contact =>
+      contact.name.toLowerCase().includes(this.state.filter.toLowerCase())
+    );
+  };
+  deleteContact = conatactId => {
+    this.setState({
+      contacts: this.state.contacts.filter(
+        contact => contact.id !== conatactId
       ),
-    }));
+    });
   };
   render() {
     return (
@@ -37,14 +48,20 @@ export class App extends Component {
         <GlobalStyle />
         <section>
           <h1>Phonebook</h1>
-          <ContactForm onSubmit={this.addContact} />
+          <ContactForm
+            onSubmit={this.addContact}
+            contacts={this.state.contacts}
+          />
 
           <h2>Contacts</h2>
           <Filter
             setFilterName={this.setFilterName}
             value={this.state.filter}
           />
-          <ContactList contacts={this.state.contacts} />
+          <ContactList
+            contacts={this.filteredContacts()}
+            deleteContact={this.deleteContact}
+          />
         </section>
       </>
     );
